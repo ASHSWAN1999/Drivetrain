@@ -12,16 +12,24 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 # SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
 # SAMPLE_RANGE_NAME = 'Class Data!A2:E'
 SAMPLE_SPREADSHEET_ID = '1Kx0QlxJy6_IUbmdS0-kOA1tjuJKSParKlkN3Q_79ZwA'
-SAMPLE_RANGE_NAME = '1!A2:D17'
+SAMPLE_RANGE_NAME = '1!A2:I18'
+FW = 10
+T = 76672
+
+MATRIX = []
 
 GEAR_INDEX = []
+
 
 def main():
     gears = ratio_combinations()
     #print(gears)
-    convert_to_indicies(gears)
+    GEAR_INDEX.extend(convert_to_indicies(gears))
+    print(GEAR_INDEX)
+    add_FoS_to_GEAR()
+    #test()
 
-def retrieve(col):
+def retrieve_sheet(col):
     """Shows basic usage of the Sheets API.
 
     Prints values from a sample spreadsheet.
@@ -47,6 +55,21 @@ def retrieve(col):
             # print(u'%s, %s' % (row[0], row[2]))
             l.append(row[col])
     return (l)
+
+
+def make_matrix():
+    for i in range(8):
+        MATRIX.append(retrieve_sheet(i))
+
+make_matrix()
+
+def retrieve(col):
+    return MATRIX[col]
+
+
+
+
+
 
 def ratio_combinations():
 
@@ -98,8 +121,100 @@ def convert_to_indicies(gear_tooth_list):
 
         indicies_list.append(one_set)
 
-    print(indicies_list)
+    #print(indicies_list)
+    return indicies_list
+
+def FoS_given_T(combo, Torque, gear_num):
+    # for i in GEAR_INDEX:
+    #
+    #combo = GEAR_INDEX[9]
+    #Torque = T
+
+    pitch_diameters = retrieve(6)
+    diameter = int(pitch_diameters[combo[gear_num]])
+
+    Wt = Torque/(diameter/2)
+
+    teeth_num = retrieve(0)
+    tooth_num = int(teeth_num[combo[gear_num]])
+
+    P = tooth_num/diameter
+
+    b = FW
+
+    l_factors = retrieve(7)
+    y = float(l_factors[combo[gear_num]])
+
+    Stress = (Wt*P)/(b*y)
+    FoS = Stress/460.9
+    #print(FoS)
+    return FoS
+
+def FoS1(combo):
+    FoS1 = round(FoS_given_T(combo, Torque=T, gear_num=0), 3)
+    return FoS1
+
+def FoS2(combo):
+    teeth = retrieve(0)
+    tooth1 = int(teeth[combo[0]])
+
+    tooth2 = int(teeth[combo[1]])
+
+    Torque = T * (tooth2/tooth1)
+
+    FoS2 = round(FoS_given_T(combo, Torque, 1), 3)
+    return FoS2
+
+def FoS3(combo):
+    teeth = retrieve(0)
+    tooth1 = int(teeth[combo[0]])
+
+    tooth2 = int(teeth[combo[1]])
+
+    Torque = T * (tooth2/tooth1)
+
+    FoS3 = round(FoS_given_T(combo, Torque, 2), 3)
+    return FoS3
+
+def FoS4(combo):
+    teeth = retrieve(0)
+    tooth1 = int(teeth[combo[0]])
+
+    tooth2 = int(teeth[combo[1]])
+
+    tooth3 = int(teeth[combo[2]])
+
+    tooth4 = int(teeth[combo[3]])
+
+    Torque = T * ((tooth2/tooth1)*(tooth4/tooth3))
+
+    FoS4 = round(FoS_given_T(combo, Torque, 3), 3)
+    return FoS4
+
+def combo_FoS(combo):
+    FoS_list = []
+    FoS_list.append(FoS1(combo))
+    FoS_list.append(FoS2(combo))
+    FoS_list.append(FoS3(combo))
+    FoS_list.append(FoS4(combo))
+    #print(FoS_list)
+    return FoS_list
+
+def add_FoS_to_GEAR():
+    for i in range(len(GEAR_INDEX)):
+        print(i)
+        FoS_list = combo_FoS(GEAR_INDEX[i])
+        GEAR_INDEX[i].extend(FoS_list)
+
+    #print(GEAR_INDEX)
+
+
+def test():
+    pitch_diameters = retrieve(6)
+    pd = pitch_diameters[GEAR_INDEX[0][0]]
+    print(pd)
 
 
 if __name__ == '__main__':
     main()
+    #test()
