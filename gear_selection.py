@@ -15,6 +15,7 @@ SAMPLE_SPREADSHEET_ID = '1Kx0QlxJy6_IUbmdS0-kOA1tjuJKSParKlkN3Q_79ZwA'
 SAMPLE_RANGE_NAME = '1!A2:I18'
 FW = 10
 T = 76672
+LOW_FOS = 4
 
 MATRIX = []
 
@@ -25,9 +26,11 @@ def main():
     gears = ratio_combinations()
     #print(gears)
     GEAR_INDEX.extend(convert_to_indicies(gears))
-    print(GEAR_INDEX)
+
     add_FoS_to_GEAR()
-    #test()
+    print(GEAR_INDEX)
+    good_combos = filter_gears()
+    return good_combos
 
 def retrieve_sheet(col):
     """Shows basic usage of the Sheets API.
@@ -65,11 +68,6 @@ make_matrix()
 
 def retrieve(col):
     return MATRIX[col]
-
-
-
-
-
 
 def ratio_combinations():
 
@@ -202,12 +200,29 @@ def combo_FoS(combo):
 
 def add_FoS_to_GEAR():
     for i in range(len(GEAR_INDEX)):
-        print(i)
+        #print(i)
         FoS_list = combo_FoS(GEAR_INDEX[i])
         GEAR_INDEX[i].extend(FoS_list)
 
     #print(GEAR_INDEX)
 
+def filter_gears():
+
+    bad_is = []
+    good_combos = []
+    for i in range(len(GEAR_INDEX)):
+        combo = GEAR_INDEX[i]
+        #print(combo)
+        combo_counter = 0
+        for j in range(4):
+            if combo[j+4] < LOW_FOS:
+                combo_counter += 1
+        if combo_counter == 0:
+            good_combos.append(combo)
+
+    #GEAR_INDEX = good_combos
+    #print(good_combos)
+    return good_combos
 
 def test():
     pitch_diameters = retrieve(6)
@@ -216,5 +231,6 @@ def test():
 
 
 if __name__ == '__main__':
-    main()
+    gc = main()
+    print(gc)
     #test()
